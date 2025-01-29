@@ -1,156 +1,214 @@
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local isMobile = UserInputService.TouchEnabled
 
--- Modern Color Palette
 local Theme = {
-    Primary = Color3.fromRGB(32, 33, 36),      -- Dark background
-    Secondary = Color3.fromRGB(40, 41, 45),    -- Lighter elements
-    Accent = Color3.fromRGB(138, 180, 255),    -- Bright blue accent
-    Accent2 = Color3.fromRGB(255, 125, 203),   -- Pink accent
+    Background = Color3.fromRGB(20, 20, 20),
+    Section = Color3.fromRGB(25, 25, 25),
+    Element = Color3.fromRGB(30, 30, 30),
     Text = Color3.fromRGB(255, 255, 255),
-    TextDark = Color3.fromRGB(175, 175, 175),
-    Error = Color3.fromRGB(255, 97, 97),
-    Success = Color3.fromRGB(87, 255, 154)
+    Accent = Color3.fromRGB(98, 189, 255),
+    Stroke = Color3.fromRGB(50, 50, 50)
 }
-
--- Sleek animations
-local function CreateTween(instance, properties, duration)
-    return TweenService:Create(
-        instance,
-        TweenInfo.new(duration or 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
-        properties
-    )
-end
 
 function Library:CreateWindow(title)
     local GUI = Instance.new("ScreenGui")
-    local MainFrame = Instance.new("Frame")
-    MainFrame.Size = UDim2.new(0, 600, 0, 400)
-    MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
-    MainFrame.BackgroundColor3 = Theme.Primary
+    GUI.Name = "OnionStyle"
+    GUI.ResetOnSpawn = false
+    GUI.ZIndexBehavior = Enum.ZIndexBehavior.Global
     
-    -- Add glass blur effect
-    local Blur = Instance.new("BlurEffect")
-    Blur.Size = 10
-    Blur.Parent = game:GetService("Lighting")
-    
-    -- Stylish top bar with gradient
+    local Main = Instance.new("Frame")
+    Main.Name = "Main"
+    Main.Size = isMobile and UDim2.new(0.9, 0, 0.6, 0) or UDim2.new(0, 550, 0, 400)
+    Main.Position = UDim2.new(0.5, -275, 0.5, -200)
+    Main.BackgroundColor3 = Theme.Background
+    Main.BorderSizePixel = 0
+    Main.ClipsDescendants = true
+    Main.Parent = GUI
+
     local TopBar = Instance.new("Frame")
-    TopBar.Size = UDim2.new(1, 0, 0, 35)
-    local Gradient = Instance.new("UIGradient")
-    Gradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Theme.Accent),
-        ColorSequenceKeypoint.new(1, Theme.Accent2)
-    })
-    Gradient.Parent = TopBar
+    TopBar.Size = UDim2.new(1, 0, 0, 40)
+    TopBar.BackgroundColor3 = Theme.Section
+    TopBar.BorderSizePixel = 0
+    TopBar.Parent = Main
+
+    local Title = Instance.new("TextLabel")
+    Title.Text = title
+    Title.Size = UDim2.new(1, -40, 1, 0)
+    Title.Position = UDim2.new(0, 10, 0, 0)
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = Theme.Text
+    Title.TextSize = 16
+    Title.Font = Enum.Font.GothamBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Parent = TopBar
+
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Position = UDim2.new(1, -35, 0, 5)
+    CloseButton.BackgroundColor3 = Theme.Element
+    CloseButton.Text = "×"
+    CloseButton.TextColor3 = Theme.Text
+    CloseButton.TextSize = 20
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.Parent = TopBar
     
-    -- Modern tab system
-    local TabContainer = Instance.new("Frame")
-    TabContainer.Size = UDim2.new(0, 150, 1, -35)
-    TabContainer.Position = UDim2.new(0, 0, 0, 35)
-    TabContainer.BackgroundColor3 = Theme.Secondary
+    CloseButton.MouseEnter:Connect(function()
+        TweenService:Create(CloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 70, 70)}):Play()
+    end)
     
-    -- Add glass effect to tabs
-    local GlassEffect = Instance.new("ImageLabel")
-    GlassEffect.BackgroundTransparency = 0.9
-    GlassEffect.Image = "rbxassetid://4641149554"
-    GlassEffect.ImageTransparency = 0.85
+    CloseButton.MouseLeave:Connect(function()
+        TweenService:Create(CloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Element}):Play()
+    end)
     
-    -- Content area with modern shadows
-    local ContentArea = Instance.new("Frame")
-    ContentArea.Size = UDim2.new(1, -150, 1, -35)
-    ContentArea.Position = UDim2.new(0, 150, 0, 35)
-    ContentArea.BackgroundColor3 = Theme.Primary
+    CloseButton.MouseButton1Click:Connect(function()
+        GUI:Destroy()
+    end)
+
+    local TabContainer = Instance.new("ScrollingFrame")
+    TabContainer.Size = UDim2.new(0, 130, 1, -40)
+    TabContainer.Position = UDim2.new(0, 0, 0, 40)
+    TabContainer.BackgroundColor3 = Theme.Section
+    TabContainer.BorderSizePixel = 0
+    TabContainer.ScrollBarThickness = 2
+    TabContainer.ScrollBarImageColor3 = Theme.Accent
+    TabContainer.Parent = Main
+
+    local TabList = Instance.new("UIListLayout")
+    TabList.Padding = UDim.new(0, 5)
+    TabList.Parent = TabContainer
+
+    local ContentContainer = Instance.new("Frame")
+    ContentContainer.Size = UDim2.new(1, -130, 1, -40)
+    ContentContainer.Position = UDim2.new(0, 130, 0, 40)
+    ContentContainer.BackgroundColor3 = Theme.Background
+    ContentContainer.BorderSizePixel = 0
+    ContentContainer.Parent = Main
+
+    local dragging, dragInput, dragStart, startPos
     
-    -- Add shadow
-    local Shadow = Instance.new("ImageLabel")
-    Shadow.Image = "rbxassetid://5554236805"
-    Shadow.ImageColor3 = Color3.fromRGB(0,0,0)
-    Shadow.ImageTransparency = 0.4
-    Shadow.Size = UDim2.new(1.1, 0, 1.1, 0)
-    Shadow.Position = UDim2.new(-0.05, 0, -0.05, 0)
-    Shadow.BackgroundTransparency = 1
-    Shadow.Parent = MainFrame
+    TopBar.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = Main.Position
+        end
+    end)
     
-    -- Fancy corner rounding
-    local Corner = Instance.new("UICorner")
-    Corner.CornerRadius = UDim.new(0, 10)
-    Corner.Parent = MainFrame
+    TopBar.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
     
-    -- Add smooth hover animations for all interactive elements
-    local function AddHoverEffect(button)
-        button.MouseEnter:Connect(function()
-            CreateTween(button, {BackgroundColor3 = Theme.Accent}):Play()
-        end)
-        button.MouseLeave:Connect(function()
-            CreateTween(button, {BackgroundColor3 = Theme.Secondary}):Play()
-        end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local delta = input.Position - dragStart
+            TweenService:Create(Main, TweenInfo.new(0.1), {
+                Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            }):Play()
+        end
+    end)
+
+    local function AddCorners(instance)
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = instance
     end
-    
-    -- Create modern elements
+
+    AddCorners(Main)
+    AddCorners(CloseButton)
+
     function Library:CreateTab(name)
+        local Tab = {}
+        
         local TabButton = Instance.new("TextButton")
-        TabButton.Size = UDim2.new(1, -20, 0, 40)
-        TabButton.BackgroundColor3 = Theme.Secondary
+        TabButton.Size = UDim2.new(1, -10, 0, 35)
+        TabButton.BackgroundColor3 = Theme.Element
         TabButton.Text = name
         TabButton.TextColor3 = Theme.Text
-        TabButton.Font = Enum.Font.GothamBold
-        AddHoverEffect(TabButton)
-        
-        -- Add ripple effect
-        TabButton.MouseButton1Down:Connect(function()
-            local Ripple = Instance.new("Frame")
-            Ripple.Size = UDim2.new(0, 0, 0, 0)
-            Ripple.BackgroundColor3 = Theme.Accent
-            Ripple.BackgroundTransparency = 0.6
-            CreateTween(Ripple, {Size = UDim2.new(1, 0, 1, 0)}):Play()
-        end)
-        
-        return TabButton
-    end
-    
-    -- Modern toggle with animation
-    function Library:CreateToggle(text)
-        local Toggle = Instance.new("Frame")
-        local ToggleButton = Instance.new("TextButton")
-        ToggleButton.Size = UDim2.new(0, 50, 0, 25)
-        ToggleButton.BackgroundColor3 = Theme.Secondary
-        
-        local ToggleCircle = Instance.new("Frame")
-        ToggleCircle.Size = UDim2.new(0, 21, 0, 21)
-        ToggleCircle.BackgroundColor3 = Theme.Text
-        
-        -- Smooth toggle animation
-        local toggled = false
-        ToggleButton.MouseButton1Click:Connect(function()
-            toggled = not toggled
-            CreateTween(ToggleCircle, {
-                Position = toggled and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 2, 0.5, -10),
-                BackgroundColor3 = toggled and Theme.Success or Theme.Text
+        TabButton.TextSize = 14
+        TabButton.Font = Enum.Font.GothamSemibold
+        TabButton.Parent = TabContainer
+        AddCorners(TabButton)
+
+        local Content = Instance.new("ScrollingFrame")
+        Content.Size = UDim2.new(1, -20, 1, -20)
+        Content.Position = UDim2.new(0, 10, 0, 10)
+        Content.BackgroundTransparency = 1
+        Content.BorderSizePixel = 0
+        Content.ScrollBarThickness = 2
+        Content.ScrollBarImageColor3 = Theme.Accent
+        Content.Visible = false
+        Content.Parent = ContentContainer
+
+        local ContentList = Instance.new("UIListLayout")
+        ContentList.Padding = UDim.new(0, 8)
+        ContentList.Parent = Content
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, v in pairs(ContentContainer:GetChildren()) do
+                if v:IsA("ScrollingFrame") then
+                    v.Visible = false
+                end
+            end
+            Content.Visible = true
+            TweenService:Create(TabButton, TweenInfo.new(0.2), {
+                BackgroundColor3 = Theme.Accent
             }):Play()
         end)
+
+        function Tab:CreateToggle(text, callback)
+            local Toggle = Instance.new("Frame")
+            Toggle.Size = UDim2.new(1, 0, 0, 35)
+            Toggle.BackgroundColor3 = Theme.Element
+            Toggle.Parent = Content
+            AddCorners(Toggle)
+            return Toggle
+        end
+
+        function Tab:CreateSlider(text, min, max, default, callback)
+            local Slider = Instance.new("Frame")
+            Slider.Size = UDim2.new(1, 0, 0, 45)
+            Slider.BackgroundColor3 = Theme.Element
+            Slider.Parent = Content
+            AddCorners(Slider)
+            return Slider
+        end
+
+        function Tab:CreateButton(text, callback)
+            local Button = Instance.new("TextButton")
+            Button.Size = UDim2.new(1, 0, 0, 35)
+            Button.BackgroundColor3 = Theme.Element
+            Button.Text = text
+            Button.TextColor3 = Theme.Text
+            Button.TextSize = 14
+            Button.Font = Enum.Font.GothamSemibold
+            Button.Parent = Content
+            AddCorners(Button)
+
+            Button.MouseEnter:Connect(function()
+                TweenService:Create(Button, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Theme.Accent
+                }):Play()
+            end)
+
+            Button.MouseLeave:Connect(function()
+                TweenService:Create(Button, TweenInfo.new(0.2), {
+                    BackgroundColor3 = Theme.Element
+                }):Play()
+            end)
+
+            Button.MouseButton1Click:Connect(callback)
+            return Button
+        end
+
+        return Tab
     end
-    
-    -- Modern slider with glow
-    function Library:CreateSlider(min, max)
-        local Slider = Instance.new("Frame")
-        local SliderBar = Instance.new("Frame")
-        SliderBar.Size = UDim2.new(1, -20, 0, 4)
-        SliderBar.BackgroundColor3 = Theme.Secondary
-        
-        local SliderFill = Instance.new("Frame")
-        SliderFill.Size = UDim2.new(0.5, 0, 1, 0)
-        SliderFill.BackgroundColor3 = Theme.Accent
-        
-        -- Add glow effect
-        local Glow = Instance.new("ImageLabel")
-        Glow.Image = "rbxassetid://5554236805"
-        Glow.ImageColor3 = Theme.Accent
-        Glow.ImageTransparency = 0.7
-        Glow.Size = UDim2.new(1.2, 0, 1.2, 0)
-    end
-    
+
+    GUI.Parent = CoreGui
     return Library
 end
 
