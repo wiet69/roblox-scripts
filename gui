@@ -1,15 +1,35 @@
-local Library = {}
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local CoreGui = game:GetService("CoreGui")
-
 local Theme = {
-    Background = Color3.fromRGB(25, 25, 25),
-    Section = Color3.fromRGB(30, 30, 30),
-    Element = Color3.fromRGB(35, 35, 35),
-    Text = Color3.fromRGB(255, 255, 255),
-    Accent = Color3.fromRGB(0, 170, 255)
+    Background = Color3.fromRGB(30, 30, 30),
+    Section = Color3.fromRGB(35, 35, 35),
+    Element = Color3.fromRGB(40, 40, 40),
+    Text = Color3.fromRGB(220, 220, 220),
+    Accent = Color3.fromRGB(0, 170, 255),
+    DarkAccent = Color3.fromRGB(0, 140, 210)
 }
+
+-- Add smooth transitions
+local function CreateTween(instance, properties)
+    return TweenService:Create(instance, TweenInfo.new(0.2), properties)
+end
+
+-- Update hover effects
+Button.MouseEnter:Connect(function()
+    CreateTween(Button, {BackgroundColor3 = Theme.DarkAccent}):Play()
+end)
+
+Button.MouseLeave:Connect(function()
+    CreateTween(Button, {BackgroundColor3 = Theme.Element}):Play()
+end)
+
+-- Add subtle shadow
+local Shadow = Instance.new("ImageLabel")
+Shadow.Image = "rbxassetid://5554236805"
+Shadow.ImageColor3 = Color3.fromRGB(0,0,0)
+Shadow.ImageTransparency = 0.6
+Shadow.Size = UDim2.new(1.1, 0, 1.1, 0)
+Shadow.Position = UDim2.new(-0.05, 0, -0.05, 0)
+Shadow.BackgroundTransparency = 1
+Shadow.Parent = Main
 
 function Library:CreateWindow(title)
     local GUI = Instance.new("ScreenGui")
