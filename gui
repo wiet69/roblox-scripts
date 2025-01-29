@@ -4,6 +4,7 @@ local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local isMobile = UserInputService.TouchEnabled
 
+-- Onion-style theme
 local Theme = {
     Background = Color3.fromRGB(20, 20, 20),
     Section = Color3.fromRGB(25, 25, 25),
@@ -28,6 +29,7 @@ function Library:CreateWindow(title)
     Main.ClipsDescendants = true
     Main.Parent = GUI
 
+    -- Top bar with title and close button
     local TopBar = Instance.new("Frame")
     TopBar.Size = UDim2.new(1, 0, 0, 40)
     TopBar.BackgroundColor3 = Theme.Section
@@ -45,6 +47,7 @@ function Library:CreateWindow(title)
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Parent = TopBar
 
+    -- Stylish close button
     local CloseButton = Instance.new("TextButton")
     CloseButton.Size = UDim2.new(0, 30, 0, 30)
     CloseButton.Position = UDim2.new(1, -35, 0, 5)
@@ -55,6 +58,7 @@ function Library:CreateWindow(title)
     CloseButton.Font = Enum.Font.GothamBold
     CloseButton.Parent = TopBar
     
+    -- Add smooth hover and click effects
     CloseButton.MouseEnter:Connect(function()
         TweenService:Create(CloseButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 70, 70)}):Play()
     end)
@@ -67,6 +71,7 @@ function Library:CreateWindow(title)
         GUI:Destroy()
     end)
 
+    -- Tab container with smooth scrolling
     local TabContainer = Instance.new("ScrollingFrame")
     TabContainer.Size = UDim2.new(0, 130, 1, -40)
     TabContainer.Position = UDim2.new(0, 0, 0, 40)
@@ -80,6 +85,7 @@ function Library:CreateWindow(title)
     TabList.Padding = UDim.new(0, 5)
     TabList.Parent = TabContainer
 
+    -- Content area
     local ContentContainer = Instance.new("Frame")
     ContentContainer.Size = UDim2.new(1, -130, 1, -40)
     ContentContainer.Position = UDim2.new(0, 130, 0, 40)
@@ -87,6 +93,7 @@ function Library:CreateWindow(title)
     ContentContainer.BorderSizePixel = 0
     ContentContainer.Parent = Main
 
+    -- Make window draggable with smooth animation
     local dragging, dragInput, dragStart, startPos
     
     TopBar.InputBegan:Connect(function(input)
@@ -112,6 +119,7 @@ function Library:CreateWindow(title)
         end
     end)
 
+    -- Corner rounding
     local function AddCorners(instance)
         local corner = Instance.new("UICorner")
         corner.CornerRadius = UDim.new(0, 6)
@@ -121,6 +129,7 @@ function Library:CreateWindow(title)
     AddCorners(Main)
     AddCorners(CloseButton)
 
+    -- Create tab function
     function Library:CreateTab(name)
         local Tab = {}
         
@@ -148,6 +157,7 @@ function Library:CreateWindow(title)
         ContentList.Padding = UDim.new(0, 8)
         ContentList.Parent = Content
 
+        -- Tab button click handler
         TabButton.MouseButton1Click:Connect(function()
             for _, v in pairs(ContentContainer:GetChildren()) do
                 if v:IsA("ScrollingFrame") then
@@ -155,17 +165,22 @@ function Library:CreateWindow(title)
                 end
             end
             Content.Visible = true
+            
+            -- Highlight active tab
             TweenService:Create(TabButton, TweenInfo.new(0.2), {
                 BackgroundColor3 = Theme.Accent
             }):Play()
         end)
 
+        -- Create elements functions
         function Tab:CreateToggle(text, callback)
             local Toggle = Instance.new("Frame")
             Toggle.Size = UDim2.new(1, 0, 0, 35)
             Toggle.BackgroundColor3 = Theme.Element
             Toggle.Parent = Content
             AddCorners(Toggle)
+
+            -- Add toggle implementation here
             return Toggle
         end
 
@@ -175,6 +190,8 @@ function Library:CreateWindow(title)
             Slider.BackgroundColor3 = Theme.Element
             Slider.Parent = Content
             AddCorners(Slider)
+
+            -- Add slider implementation here
             return Slider
         end
 
@@ -189,6 +206,7 @@ function Library:CreateWindow(title)
             Button.Parent = Content
             AddCorners(Button)
 
+            -- Add button effects
             Button.MouseEnter:Connect(function()
                 TweenService:Create(Button, TweenInfo.new(0.2), {
                     BackgroundColor3 = Theme.Accent
