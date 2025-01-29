@@ -1,77 +1,130 @@
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local UICorner = Instance.new("UICorner")
-local Title = Instance.new("TextLabel")
-local PlayerList = Instance.new("ScrollingFrame")
-local UIListLayout = Instance.new("UIListLayout")
+local Library = {}
 
-ScreenGui.Parent = game.CoreGui
-ScreenGui.ResetOnSpawn = false
+function Library:CreateWindow(name)
+    local ScreenGui = Instance.new("ScreenGui")
+    local MainFrame = Instance.new("Frame")
+    local UICorner = Instance.new("UICorner")
+    local Title = Instance.new("TextLabel")
+    local TabHolder = Instance.new("Frame")
+    local UIListLayout = Instance.new("UIListLayout")
+    local ContentFrame = Instance.new("Frame")
 
-MainFrame.Name = "MainFrame"
-MainFrame.Parent = ScreenGui
-MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-MainFrame.Position = UDim2.new(0.8, 0, 0.3, 0)
-MainFrame.Size = UDim2.new(0, 200, 0, 300)
-MainFrame.Active = true
-MainFrame.Draggable = true
+    ScreenGui.Parent = game.CoreGui
+    ScreenGui.ResetOnSpawn = false
 
-UICorner.Parent = MainFrame
-UICorner.CornerRadius = UDim.new(0, 6)
+    MainFrame.Name = "MainFrame"
+    MainFrame.Parent = ScreenGui
+    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    MainFrame.Position = UDim2.new(0.5, -150, 0.5, -175)
+    MainFrame.Size = UDim2.new(0, 300, 0, 350)
+    MainFrame.Active = true
+    MainFrame.Draggable = true
 
-Title.Name = "Title"
-Title.Parent = MainFrame
-Title.BackgroundTransparency = 1
-Title.Position = UDim2.new(0, 0, 0, 0)
-Title.Size = UDim2.new(1, 0, 0, 30)
-Title.Font = Enum.Font.GothamBold
-Title.Text = "Players"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 16
+    UICorner.Parent = MainFrame
+    UICorner.CornerRadius = UDim.new(0, 6)
 
-PlayerList.Name = "PlayerList"
-PlayerList.Parent = MainFrame
-PlayerList.BackgroundTransparency = 1
-PlayerList.Position = UDim2.new(0, 5, 0, 35)
-PlayerList.Size = UDim2.new(1, -10, 1, -40)
-PlayerList.ScrollBarThickness = 2
+    Title.Name = "Title"
+    Title.Parent = MainFrame
+    Title.BackgroundTransparency = 1
+    Title.Position = UDim2.new(0, 10, 0, 0)
+    Title.Size = UDim2.new(1, -20, 0, 30)
+    Title.Font = Enum.Font.GothamBold
+    Title.Text = name
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 16
+    Title.TextXAlignment = Enum.TextXAlignment.Left
 
-UIListLayout.Parent = PlayerList
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 5)
+    TabHolder.Name = "TabHolder"
+    TabHolder.Parent = MainFrame
+    TabHolder.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    TabHolder.Position = UDim2.new(0, 5, 0, 35)
+    TabHolder.Size = UDim2.new(0, 100, 1, -40)
 
-local function createButton(name)
-    local Button = Instance.new("TextButton")
-    Button.Name = name
-    Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    Button.Size = UDim2.new(1, 0, 0, 30)
-    Button.Font = Enum.Font.GothamSemibold
-    Button.Text = name
-    Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Button.TextSize = 14
-    Button.Parent = PlayerList
-    
-    local ButtonCorner = Instance.new("UICorner")
-    ButtonCorner.CornerRadius = UDim.new(0, 4)
-    ButtonCorner.Parent = Button
-    
-    Button.MouseButton1Click:Connect(function()
-        game.Players.LocalPlayer.Character:MoveTo(game.Players[name].Character.HumanoidRootPart.Position)
-    end)
+    local TabHolderCorner = Instance.new("UICorner")
+    TabHolderCorner.CornerRadius = UDim.new(0, 6)
+    TabHolderCorner.Parent = TabHolder
+
+    UIListLayout.Parent = TabHolder
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 5)
+
+    ContentFrame.Name = "ContentFrame"
+    ContentFrame.Parent = MainFrame
+    ContentFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    ContentFrame.Position = UDim2.new(0, 110, 0, 35)
+    ContentFrame.Size = UDim2.new(1, -115, 1, -40)
+
+    local ContentCorner = Instance.new("UICorner")
+    ContentCorner.CornerRadius = UDim.new(0, 6)
+    ContentCorner.Parent = ContentFrame
+
+    local Window = {}
+
+    function Window:CreateTab(name)
+        local TabButton = Instance.new("TextButton")
+        local TabContent = Instance.new("ScrollingFrame")
+        local ContentList = Instance.new("UIListLayout")
+
+        TabButton.Name = name.."Tab"
+        TabButton.Parent = TabHolder
+        TabButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+        TabButton.Size = UDim2.new(1, -10, 0, 30)
+        TabButton.Position = UDim2.new(0, 5, 0, 5)
+        TabButton.Font = Enum.Font.GothamSemibold
+        TabButton.Text = name
+        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabButton.TextSize = 14
+        TabButton.AutoButtonColor = false
+
+        local TabButtonCorner = Instance.new("UICorner")
+        TabButtonCorner.CornerRadius = UDim.new(0, 4)
+        TabButtonCorner.Parent = TabButton
+
+        TabContent.Name = name.."Content"
+        TabContent.Parent = ContentFrame
+        TabContent.BackgroundTransparency = 1
+        TabContent.Position = UDim2.new(0, 5, 0, 5)
+        TabContent.Size = UDim2.new(1, -10, 1, -10)
+        TabContent.ScrollBarThickness = 2
+        TabContent.Visible = false
+
+        ContentList.Parent = TabContent
+        ContentList.SortOrder = Enum.SortOrder.LayoutOrder
+        ContentList.Padding = UDim.new(0, 5)
+
+        TabButton.MouseButton1Click:Connect(function()
+            for _, content in pairs(ContentFrame:GetChildren()) do
+                if content:IsA("ScrollingFrame") then
+                    content.Visible = false
+                end
+            end
+            TabContent.Visible = true
+        end)
+
+        local Tab = {}
+
+        function Tab:CreateButton(text, callback)
+            local Button = Instance.new("TextButton")
+            Button.Name = text.."Button"
+            Button.Parent = TabContent
+            Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            Button.Size = UDim2.new(1, 0, 0, 30)
+            Button.Font = Enum.Font.GothamSemibold
+            Button.Text = text
+            Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Button.TextSize = 14
+
+            local ButtonCorner = Instance.new("UICorner")
+            ButtonCorner.CornerRadius = UDim.new(0, 4)
+            ButtonCorner.Parent = Button
+
+            Button.MouseButton1Click:Connect(callback)
+        end
+
+        return Tab
+    end
+
+    return Window
 end
 
-for _, player in pairs(game.Players:GetPlayers()) do
-    if player ~= game.Players.LocalPlayer then
-        createButton(player.Name)
-    end
-end
-
-game.Players.PlayerAdded:Connect(function(player)
-    createButton(player.Name)
-end)
-
-game.Players.PlayerRemoving:Connect(function(player)
-    if PlayerList:FindFirstChild(player.Name) then
-        PlayerList[player.Name]:Destroy()
-    end
-end)
+return Library
