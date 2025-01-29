@@ -1,233 +1,156 @@
 local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local isMobile = UserInputService.TouchEnabled
 
--- Utility functions
-local function createTween(object, info, properties)
-    local tween = TweenService:Create(object, TweenInfo.new(unpack(info)), properties)
-    return tween
+-- Modern Color Palette
+local Theme = {
+    Primary = Color3.fromRGB(32, 33, 36),      -- Dark background
+    Secondary = Color3.fromRGB(40, 41, 45),    -- Lighter elements
+    Accent = Color3.fromRGB(138, 180, 255),    -- Bright blue accent
+    Accent2 = Color3.fromRGB(255, 125, 203),   -- Pink accent
+    Text = Color3.fromRGB(255, 255, 255),
+    TextDark = Color3.fromRGB(175, 175, 175),
+    Error = Color3.fromRGB(255, 97, 97),
+    Success = Color3.fromRGB(87, 255, 154)
+}
+
+-- Sleek animations
+local function CreateTween(instance, properties, duration)
+    return TweenService:Create(
+        instance,
+        TweenInfo.new(duration or 0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out),
+        properties
+    )
 end
 
 function Library:CreateWindow(title)
     local GUI = Instance.new("ScreenGui")
-    GUI.Name = "CustomGUI"
-    GUI.ResetOnSpawn = false
+    local MainFrame = Instance.new("Frame")
+    MainFrame.Size = UDim2.new(0, 600, 0, 400)
+    MainFrame.Position = UDim2.new(0.5, -300, 0.5, -200)
+    MainFrame.BackgroundColor3 = Theme.Primary
     
-    -- Main container
-    local Main = Instance.new("Frame")
-    Main.Name = "Main"
-    Main.Size = UDim2.new(0, 450, 0, 300)
-    Main.Position = UDim2.new(0.5, -225, 0.5, -150)
-    Main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    Main.BorderSizePixel = 0
-    Main.Parent = GUI
+    -- Add glass blur effect
+    local Blur = Instance.new("BlurEffect")
+    Blur.Size = 10
+    Blur.Parent = game:GetService("Lighting")
     
-    -- Make draggable
-    local dragging
-    local dragInput
-    local dragStart
-    local startPos
-
-    local function updateDrag(input)
-        local delta = input.Position - dragStart
-        Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    -- Stylish top bar with gradient
+    local TopBar = Instance.new("Frame")
+    TopBar.Size = UDim2.new(1, 0, 0, 35)
+    local Gradient = Instance.new("UIGradient")
+    Gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Theme.Accent),
+        ColorSequenceKeypoint.new(1, Theme.Accent2)
+    })
+    Gradient.Parent = TopBar
+    
+    -- Modern tab system
+    local TabContainer = Instance.new("Frame")
+    TabContainer.Size = UDim2.new(0, 150, 1, -35)
+    TabContainer.Position = UDim2.new(0, 0, 0, 35)
+    TabContainer.BackgroundColor3 = Theme.Secondary
+    
+    -- Add glass effect to tabs
+    local GlassEffect = Instance.new("ImageLabel")
+    GlassEffect.BackgroundTransparency = 0.9
+    GlassEffect.Image = "rbxassetid://4641149554"
+    GlassEffect.ImageTransparency = 0.85
+    
+    -- Content area with modern shadows
+    local ContentArea = Instance.new("Frame")
+    ContentArea.Size = UDim2.new(1, -150, 1, -35)
+    ContentArea.Position = UDim2.new(0, 150, 0, 35)
+    ContentArea.BackgroundColor3 = Theme.Primary
+    
+    -- Add shadow
+    local Shadow = Instance.new("ImageLabel")
+    Shadow.Image = "rbxassetid://5554236805"
+    Shadow.ImageColor3 = Color3.fromRGB(0,0,0)
+    Shadow.ImageTransparency = 0.4
+    Shadow.Size = UDim2.new(1.1, 0, 1.1, 0)
+    Shadow.Position = UDim2.new(-0.05, 0, -0.05, 0)
+    Shadow.BackgroundTransparency = 1
+    Shadow.Parent = MainFrame
+    
+    -- Fancy corner rounding
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 10)
+    Corner.Parent = MainFrame
+    
+    -- Add smooth hover animations for all interactive elements
+    local function AddHoverEffect(button)
+        button.MouseEnter:Connect(function()
+            CreateTween(button, {BackgroundColor3 = Theme.Accent}):Play()
+        end)
+        button.MouseLeave:Connect(function()
+            CreateTween(button, {BackgroundColor3 = Theme.Secondary}):Play()
+        end)
     end
-
-    Main.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragStart = input.Position
-            startPos = Main.Position
-        end
-    end)
-
-    Main.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            updateDrag(input)
-        end
-    end)
-
-    -- Tab system
-    local TabHolder = Instance.new("Frame")
-    TabHolder.Name = "TabHolder"
-    TabHolder.Size = UDim2.new(0, 120, 1, 0)
-    TabHolder.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    TabHolder.BorderSizePixel = 0
-    TabHolder.Parent = Main
-
-    local TabContainer = Instance.new("ScrollingFrame")
-    TabContainer.Name = "TabContainer"
-    TabContainer.Size = UDim2.new(1, 0, 1, 0)
-    TabContainer.BackgroundTransparency = 1
-    TabContainer.ScrollBarThickness = 2
-    TabContainer.Parent = TabHolder
-
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.Parent = TabContainer
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    UIListLayout.Padding = UDim.new(0, 5)
-
-    local ContentContainer = Instance.new("Frame")
-    ContentContainer.Name = "ContentContainer"
-    ContentContainer.Size = UDim2.new(1, -120, 1, 0)
-    ContentContainer.Position = UDim2.new(0, 120, 0, 0)
-    ContentContainer.BackgroundTransparency = 1
-    ContentContainer.Parent = Main
-
-    local Tabs = {}
     
+    -- Create modern elements
     function Library:CreateTab(name)
-        local Tab = {}
-        
         local TabButton = Instance.new("TextButton")
-        TabButton.Name = name
-        TabButton.Size = UDim2.new(1, -10, 0, 30)
-        TabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
-        TabButton.BorderSizePixel = 0
+        TabButton.Size = UDim2.new(1, -20, 0, 40)
+        TabButton.BackgroundColor3 = Theme.Secondary
         TabButton.Text = name
-        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TabButton.Parent = TabContainer
+        TabButton.TextColor3 = Theme.Text
+        TabButton.Font = Enum.Font.GothamBold
+        AddHoverEffect(TabButton)
         
-        local Content = Instance.new("ScrollingFrame")
-        Content.Name = name.."Content"
-        Content.Size = UDim2.new(1, 0, 1, 0)
-        Content.BackgroundTransparency = 1
-        Content.ScrollBarThickness = 2
-        Content.Visible = false
-        Content.Parent = ContentContainer
-        
-        local UIListLayout2 = Instance.new("UIListLayout")
-        UIListLayout2.Parent = Content
-        UIListLayout2.SortOrder = Enum.SortOrder.LayoutOrder
-        UIListLayout2.Padding = UDim.new(0, 5)
-
-        TabButton.MouseButton1Click:Connect(function()
-            for _, v in pairs(ContentContainer:GetChildren()) do
-                if v:IsA("ScrollingFrame") then
-                    v.Visible = false
-                end
-            end
-            Content.Visible = true
+        -- Add ripple effect
+        TabButton.MouseButton1Down:Connect(function()
+            local Ripple = Instance.new("Frame")
+            Ripple.Size = UDim2.new(0, 0, 0, 0)
+            Ripple.BackgroundColor3 = Theme.Accent
+            Ripple.BackgroundTransparency = 0.6
+            CreateTween(Ripple, {Size = UDim2.new(1, 0, 1, 0)}):Play()
         end)
         
-        function Tab:CreateToggle(text, callback)
-            local Toggle = Instance.new("Frame")
-            Toggle.Name = "Toggle"
-            Toggle.Size = UDim2.new(1, -10, 0, 30)
-            Toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            Toggle.BorderSizePixel = 0
-            Toggle.Parent = Content
-            
-            local ToggleButton = Instance.new("TextButton")
-            ToggleButton.Size = UDim2.new(0, 20, 0, 20)
-            ToggleButton.Position = UDim2.new(0, 5, 0.5, -10)
-            ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-            ToggleButton.Text = ""
-            ToggleButton.Parent = Toggle
-            
-            local TextLabel = Instance.new("TextLabel")
-            TextLabel.Size = UDim2.new(1, -30, 1, 0)
-            TextLabel.Position = UDim2.new(0, 30, 0, 0)
-            TextLabel.BackgroundTransparency = 1
-            TextLabel.Text = text
-            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-            TextLabel.Parent = Toggle
-            
-            local toggled = false
-            ToggleButton.MouseButton1Click:Connect(function()
-                toggled = not toggled
-                ToggleButton.BackgroundColor3 = toggled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
-                callback(toggled)
-            end)
-        end
-        
-        function Tab:CreateSlider(text, min, max, default, callback)
-            local Slider = Instance.new("Frame")
-            Slider.Name = "Slider"
-            Slider.Size = UDim2.new(1, -10, 0, 45)
-            Slider.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            Slider.BorderSizePixel = 0
-            Slider.Parent = Content
-            
-            local TextLabel = Instance.new("TextLabel")
-            TextLabel.Size = UDim2.new(1, 0, 0, 20)
-            TextLabel.BackgroundTransparency = 1
-            TextLabel.Text = text
-            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-            TextLabel.Parent = Slider
-            
-            local SliderBar = Instance.new("Frame")
-            SliderBar.Name = "SliderBar"
-            SliderBar.Size = UDim2.new(1, -10, 0, 5)
-            SliderBar.Position = UDim2.new(0, 5, 0, 30)
-            SliderBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-            SliderBar.BorderSizePixel = 0
-            SliderBar.Parent = Slider
-            
-            local SliderButton = Instance.new("TextButton")
-            SliderButton.Size = UDim2.new(0, 10, 0, 15)
-            SliderButton.Position = UDim2.new((default - min)/(max - min), -5, 0, -5)
-            SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-            SliderButton.Text = ""
-            SliderButton.Parent = SliderBar
-            
-            local Value = Instance.new("TextLabel")
-            Value.Size = UDim2.new(0, 30, 0, 20)
-            Value.Position = UDim2.new(1, -35, 0, 0)
-            Value.BackgroundTransparency = 1
-            Value.Text = tostring(default)
-            Value.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Value.Parent = Slider
-            
-            local dragging = false
-            
-            SliderButton.MouseButton1Down:Connect(function()
-                dragging = true
-            end)
-            
-            UserInputService.InputEnded:Connect(function(input)
-                if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    dragging = false
-                end
-            end)
-            
-            UserInputService.InputChanged:Connect(function(input)
-                if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                    local pos = UDim2.new(math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1), -5, 0, -5)
-                    SliderButton.Position = pos
-                    local value = math.floor(min + ((max - min) * pos.X.Scale))
-                    Value.Text = tostring(value)
-                    callback(value)
-                end
-            end)
-        end
-        
-        function Tab:CreateButton(text, callback)
-            local Button = Instance.new("TextButton")
-            Button.Name = "Button"
-            Button.Size = UDim2.new(1, -10, 0, 30)
-            Button.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-            Button.BorderSizePixel = 0
-            Button.Text = text
-            Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-            Button.Parent = Content
-            
-            Button.MouseButton1Click:Connect(callback)
-        end
-        
-        return Tab
+        return TabButton
     end
     
-    GUI.Parent = game.CoreGui
+    -- Modern toggle with animation
+    function Library:CreateToggle(text)
+        local Toggle = Instance.new("Frame")
+        local ToggleButton = Instance.new("TextButton")
+        ToggleButton.Size = UDim2.new(0, 50, 0, 25)
+        ToggleButton.BackgroundColor3 = Theme.Secondary
+        
+        local ToggleCircle = Instance.new("Frame")
+        ToggleCircle.Size = UDim2.new(0, 21, 0, 21)
+        ToggleCircle.BackgroundColor3 = Theme.Text
+        
+        -- Smooth toggle animation
+        local toggled = false
+        ToggleButton.MouseButton1Click:Connect(function()
+            toggled = not toggled
+            CreateTween(ToggleCircle, {
+                Position = toggled and UDim2.new(1, -23, 0.5, -10) or UDim2.new(0, 2, 0.5, -10),
+                BackgroundColor3 = toggled and Theme.Success or Theme.Text
+            }):Play()
+        end)
+    end
+    
+    -- Modern slider with glow
+    function Library:CreateSlider(min, max)
+        local Slider = Instance.new("Frame")
+        local SliderBar = Instance.new("Frame")
+        SliderBar.Size = UDim2.new(1, -20, 0, 4)
+        SliderBar.BackgroundColor3 = Theme.Secondary
+        
+        local SliderFill = Instance.new("Frame")
+        SliderFill.Size = UDim2.new(0.5, 0, 1, 0)
+        SliderFill.BackgroundColor3 = Theme.Accent
+        
+        -- Add glow effect
+        local Glow = Instance.new("ImageLabel")
+        Glow.Image = "rbxassetid://5554236805"
+        Glow.ImageColor3 = Theme.Accent
+        Glow.ImageTransparency = 0.7
+        Glow.Size = UDim2.new(1.2, 0, 1.2, 0)
+    end
+    
     return Library
 end
 
