@@ -1,67 +1,91 @@
 local OrionLib = {}
-OrionLib.__index = OrionLib
-
+local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-
-local ScreenGui = nil
+local Mouse = LocalPlayer:GetMouse()
+local ScreenGui = Instance.new("ScreenGui")
 local MainFrame = nil
 local Tabs = {}
-local CurrentTab = nil
 
-local Theme = {
-    BackgroundColor = Color3.fromRGB(25, 25, 25),
-    MainColor = Color3.fromRGB(45, 45, 45),
-    AccentColor = Color3.fromRGB(0, 120, 215),
-    TextColor = Color3.fromRGB(255, 255, 255),
-    ElementColor = Color3.fromRGB(35, 35, 35),
-}
+ScreenGui.Name = "SimpleUILib"
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.ResetOnSpawn = false
 
-function OrionLib:Init(title)
-    ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = "OrionLibGui"
-    ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    ScreenGui.ResetOnSpawn = false
+pcall(function()
+    ScreenGui.Parent = CoreGui
+end)
+
+if not ScreenGui.Parent then
+    ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+local function MakeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
     
-    local success, err = pcall(function()
-        ScreenGui.Parent = CoreGui
-    end)
-    
-    if not success then
-        ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    local function Update(input)
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
     
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+    
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+    
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            Update(input)
+        end
+    end)
+end
+
+function OrionLib:Init(title)
     MainFrame = Instance.new("Frame")
     MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 600, 0, 350)
-    MainFrame.Position = UDim2.new(0.5, -300, 0.5, -175)
-    MainFrame.BackgroundColor3 = Theme.BackgroundColor
+    MainFrame.Size = UDim2.new(0, 500, 0, 300)
+    MainFrame.Position = UDim2.new(0.5, -250, 0.5, -150)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     MainFrame.BorderSizePixel = 0
     MainFrame.Parent = ScreenGui
     
-    self:MakeDraggable(MainFrame)
+    MakeDraggable(MainFrame)
     
     local TitleBar = Instance.new("Frame")
     TitleBar.Name = "TitleBar"
     TitleBar.Size = UDim2.new(1, 0, 0, 30)
-    TitleBar.BackgroundColor3 = Theme.MainColor
+    TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     TitleBar.BorderSizePixel = 0
     TitleBar.Parent = MainFrame
     
-    local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Name = "TitleLabel"
-    TitleLabel.Size = UDim2.new(1, -30, 1, 0)
-    TitleLabel.Position = UDim2.new(0, 10, 0, 0)
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = title or "Orion Library"
-    TitleLabel.TextColor3 = Theme.TextColor
-    TitleLabel.TextSize = 18
-    TitleLabel.Font = Enum.Font.SourceSansBold
-    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLabel.Parent = TitleBar
+    local Title = Instance.new("TextLabel")
+    Title.Name = "Title"
+    Title.Size = UDim2.new(1, -30, 1, 0)
+    Title.BackgroundTransparency = 1
+    Title.Text = title or "Simple UI Library"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 16
+    Title.Font = Enum.Font.SourceSansBold
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Position = UDim2.new(0, 10, 0, 0)
+    Title.Parent = TitleBar
     
     local CloseButton = Instance.new("TextButton")
     CloseButton.Name = "CloseButton"
@@ -69,8 +93,8 @@ function OrionLib:Init(title)
     CloseButton.Position = UDim2.new(1, -30, 0, 0)
     CloseButton.BackgroundTransparency = 1
     CloseButton.Text = "X"
-    CloseButton.TextColor3 = Theme.TextColor
-    CloseButton.TextSize = 18
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.TextSize = 16
     CloseButton.Font = Enum.Font.SourceSansBold
     CloseButton.Parent = TitleBar
     
@@ -80,103 +104,41 @@ function OrionLib:Init(title)
     
     local TabContainer = Instance.new("Frame")
     TabContainer.Name = "TabContainer"
-    TabContainer.Size = UDim2.new(0, 150, 1, -30)
+    TabContainer.Size = UDim2.new(0, 120, 1, -30)
     TabContainer.Position = UDim2.new(0, 0, 0, 30)
-    TabContainer.BackgroundColor3 = Theme.MainColor
+    TabContainer.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     TabContainer.BorderSizePixel = 0
     TabContainer.Parent = MainFrame
     
     local TabContentContainer = Instance.new("Frame")
     TabContentContainer.Name = "TabContentContainer"
-    TabContentContainer.Size = UDim2.new(1, -150, 1, -30)
-    TabContentContainer.Position = UDim2.new(0, 150, 0, 30)
-    TabContentContainer.BackgroundColor3 = Theme.BackgroundColor
+    TabContentContainer.Size = UDim2.new(1, -120, 1, -30)
+    TabContentContainer.Position = UDim2.new(0, 120, 0, 30)
+    TabContentContainer.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     TabContentContainer.BorderSizePixel = 0
     TabContentContainer.Parent = MainFrame
     
-    local TabButtonContainer = Instance.new("ScrollingFrame")
-    TabButtonContainer.Name = "TabButtonContainer"
-    TabButtonContainer.Size = UDim2.new(1, 0, 1, 0)
-    TabButtonContainer.BackgroundTransparency = 1
-    TabButtonContainer.BorderSizePixel = 0
-    TabButtonContainer.ScrollBarThickness = 0
-    TabButtonContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-    TabButtonContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    TabButtonContainer.Parent = TabContainer
-    
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    UIListLayout.Padding = UDim.new(0, 2)
-    UIListLayout.Parent = TabButtonContainer
-    
-    self.ScreenGui = ScreenGui
     self.MainFrame = MainFrame
     self.TabContainer = TabContainer
     self.TabContentContainer = TabContentContainer
-    self.TabButtonContainer = TabButtonContainer
     
     return self
 end
 
-function OrionLib:MakeDraggable(frame)
-    local dragging = false
-    local dragInput, mousePos, framePos
-    
-    frame.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            mousePos = input.Position
-            framePos = frame.Position
-        end
-    end)
-    
-    frame.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-            dragInput = input
-        end
-    end)
-    
-    game:GetService("RunService").RenderStepped:Connect(function()
-        if dragging and dragInput and mousePos then
-            local delta = dragInput.Position - mousePos
-            frame.Position = UDim2.new(
-                framePos.X.Scale, 
-                framePos.X.Offset + delta.X, 
-                framePos.Y.Scale, 
-                framePos.Y.Offset + delta.Y
-            )
-        end
-    end)
-end
-
-function OrionLib:AddTab(name, icon)
+function OrionLib:AddTab(name)
     local TabButton = Instance.new("TextButton")
     TabButton.Name = name .. "Button"
-    TabButton.Size = UDim2.new(1, 0, 0, 40)
-    TabButton.BackgroundColor3 = Theme.ElementColor
+    TabButton.Size = UDim2.new(1, 0, 0, 30)
+    TabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
     TabButton.BorderSizePixel = 0
     TabButton.Text = name
-    TabButton.TextColor3 = Theme.TextColor
-    TabButton.TextSize = 16
-    TabButton.Font = Enum.Font.SourceSansSemibold
-    TabButton.Parent = self.TabButtonContainer
+    TabButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    TabButton.TextSize = 14
+    TabButton.Font = Enum.Font.SourceSans
+    TabButton.Parent = self.TabContainer
     
-    if icon then
-        local IconImage = Instance.new("ImageLabel")
-        IconImage.Name = "IconImage"
-        IconImage.Size = UDim2.new(0, 20, 0, 20)
-        IconImage.Position = UDim2.new(0, 10, 0.5, -10)
-        IconImage.BackgroundTransparency = 1
-        IconImage.Image = icon
-        IconImage.Parent = TabButton
-        
-        TabButton.TextXAlignment = Enum.TextXAlignment.Right
+    if #Tabs > 0 then
+        TabButton.Position = UDim2.new(0, 0, 0, #Tabs * 30)
     end
     
     local TabContent = Instance.new("ScrollingFrame")
@@ -192,7 +154,7 @@ function OrionLib:AddTab(name, icon)
     
     local UIListLayout = Instance.new("UIListLayout")
     UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    UIListLayout.Padding = UDim.new(0, 10)
+    UIListLayout.Padding = UDim.new(0, 5)
     UIListLayout.Parent = TabContent
     
     local UIPadding = Instance.new("UIPadding")
@@ -205,432 +167,305 @@ function OrionLib:AddTab(name, icon)
     local tab = {
         Name = name,
         Button = TabButton,
-        Content = TabContent,
-        Elements = {}
+        Content = TabContent
     }
     
     table.insert(Tabs, tab)
     
     TabButton.MouseButton1Click:Connect(function()
-        self:SelectTab(name)
+        for _, t in pairs(Tabs) do
+            if t.Name == name then
+                t.Content.Visible = true
+                t.Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+                t.Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            else
+                t.Content.Visible = false
+                t.Button.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                t.Button.TextColor3 = Color3.fromRGB(200, 200, 200)
+            end
+        end
     end)
     
     if #Tabs == 1 then
-        self:SelectTab(name)
+        TabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        TabContent.Visible = true
     end
     
     return {
         AddButton = function(text, callback)
-            return self:AddButton(tab, text, callback)
+            local Button = Instance.new("TextButton")
+            Button.Name = text .. "Button"
+            Button.Size = UDim2.new(1, 0, 0, 30)
+            Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            Button.BorderSizePixel = 0
+            Button.Text = text
+            Button.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Button.TextSize = 14
+            Button.Font = Enum.Font.SourceSans
+            Button.Parent = TabContent
+            
+            Button.MouseEnter:Connect(function()
+                Button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            end)
+            
+            Button.MouseLeave:Connect(function()
+                Button.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            end)
+            
+            Button.MouseButton1Click:Connect(function()
+                callback()
+            end)
+            
+            return Button
         end,
+        
         AddToggle = function(text, default, callback)
-            return self:AddToggle(tab, text, default, callback)
-        end,
-        AddSlider = function(text, min, max, default, callback)
-            return self:AddSlider(tab, text, min, max, default, callback)
-        end,
-        AddTextbox = function(text, placeholder, callback)
-            return self:AddTextbox(tab, text, placeholder, callback)
-        end
-    }
-end
-
-function OrionLib:SelectTab(name)
-    for _, tab in pairs(Tabs) do
-        if tab.Name == name then
-            tab.Content.Visible = true
-            tab.Button.BackgroundColor3 = Theme.AccentColor
-            CurrentTab = tab
-        else
-            tab.Content.Visible = false
-            tab.Button.BackgroundColor3 = Theme.ElementColor
-        end
-    end
-end
-
-function OrionLib:AddButton(tab, text, callback)
-    local Button = Instance.new("TextButton")
-    Button.Name = text .. "Button"
-    Button.Size = UDim2.new(1, 0, 0, 40)
-    Button.BackgroundColor3 = Theme.ElementColor
-    Button.BorderSizePixel = 0
-    Button.Text = text
-    Button.TextColor3 = Theme.TextColor
-    Button.TextSize = 16
-    Button.Font = Enum.Font.SourceSans
-    Button.Parent = tab.Content
-    
-    Button.MouseEnter:Connect(function()
-        TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Theme.AccentColor}):Play()
-    end)
-    
-    Button.MouseLeave:Connect(function()
-        TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Theme.ElementColor}):Play()
-    end)
-    
-    Button.MouseButton1Click:Connect(function()
-        callback()
-    end)
-    
-    return Button
-end
-
-function OrionLib:AddToggle(tab, text, default, callback)
-    local ToggleContainer = Instance.new("Frame")
-    ToggleContainer.Name = text .. "ToggleContainer"
-    ToggleContainer.Size = UDim2.new(1, 0, 0, 40)
-    ToggleContainer.BackgroundColor3 = Theme.ElementColor
-    ToggleContainer.BorderSizePixel = 0
-    ToggleContainer.Parent = tab.Content
-    
-    local TextLabel = Instance.new("TextLabel")
-    TextLabel.Name = "TextLabel"
-    TextLabel.Size = UDim2.new(1, -60, 1, 0)
-    TextLabel.Position = UDim2.new(0, 10, 0, 0)
-    TextLabel.BackgroundTransparency = 1
-    TextLabel.Text = text
-    TextLabel.TextColor3 = Theme.TextColor
-    TextLabel.TextSize = 16
-    TextLabel.Font = Enum.Font.SourceSans
-    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TextLabel.Parent = ToggleContainer
-    
-    local ToggleButton = Instance.new("Frame")
-    ToggleButton.Name = "ToggleButton"
-    ToggleButton.Size = UDim2.new(0, 40, 0, 20)
-    ToggleButton.Position = UDim2.new(1, -50, 0.5, -10)
-    ToggleButton.BackgroundColor3 = Theme.ElementColor
-    ToggleButton.BorderSizePixel = 0
-    ToggleButton.Parent = ToggleContainer
-    
-    local ToggleIndicator = Instance.new("Frame")
-    ToggleIndicator.Name = "ToggleIndicator"
-    ToggleIndicator.Size = UDim2.new(0, 16, 0, 16)
-    ToggleIndicator.Position = UDim2.new(0, 2, 0.5, -8)
-    ToggleIndicator.BackgroundColor3 = Theme.TextColor
-    ToggleIndicator.BorderSizePixel = 0
-    ToggleIndicator.Parent = ToggleButton
-    
-    local enabled = default or false
-    
-    local function updateToggle()
-        if enabled then
-            TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Theme.AccentColor}):Play()
-            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 22, 0.5, -8)}):Play()
-        else
-            TweenService:Create(ToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Theme.ElementColor}):Play()
-            TweenService:Create(ToggleIndicator, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -8)}):Play()
-        end
-        callback(enabled)
-    end
-    
-    ToggleContainer.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            enabled = not enabled
-            updateToggle()
-        end
-    end)
-    
-    updateToggle()
-    
-    return {
-        Set = function(value)
-            enabled = value
-            updateToggle()
-        end,
-        Get = function()
-            return enabled
-        end
-    }
-end
-
-function OrionLib:AddSlider(tab, text, min, max, default, callback)
-    local SliderContainer = Instance.new("Frame")
-    SliderContainer.Name = text .. "SliderContainer"
-    SliderContainer.Size = UDim2.new(1, 0, 0, 60)
-    SliderContainer.BackgroundColor3 = Theme.ElementColor
-    SliderContainer.BorderSizePixel = 0
-    SliderContainer.Parent = tab.Content
-    
-    local TextLabel = Instance.new("TextLabel")
-    TextLabel.Name = "TextLabel"
-    TextLabel.Size = UDim2.new(1, -10, 0, 30)
-    TextLabel.Position = UDim2.new(0, 10, 0, 0)
-    TextLabel.BackgroundTransparency = 1
-    TextLabel.Text = text
-    TextLabel.TextColor3 = Theme.TextColor
-    TextLabel.TextSize = 16
-    TextLabel.Font = Enum.Font.SourceSans
-    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TextLabel.Parent = SliderContainer
-    
-    local ValueLabel = Instance.new("TextLabel")
-    ValueLabel.Name = "ValueLabel"
-    ValueLabel.Size = UDim2.new(0, 50, 0, 30)
-    ValueLabel.Position = UDim2.new(1, -60, 0, 0)
-    ValueLabel.BackgroundTransparency = 1
-    ValueLabel.Text = tostring(default or min)
-    ValueLabel.TextColor3 = Theme.TextColor
-    ValueLabel.TextSize = 16
-    ValueLabel.Font = Enum.Font.SourceSans
-    ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
-    ValueLabel.Parent = SliderContainer
-    
-    local SliderBG = Instance.new("Frame")
-    SliderBG.Name = "SliderBG"
-    SliderBG.Size = UDim2.new(1, -20, 0, 10)
-    SliderBG.Position = UDim2.new(0, 10, 0, 40)
-    SliderBG.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    SliderBG.BorderSizePixel = 0
-    SliderBG.Parent = SliderContainer
-    
-    local SliderFill = Instance.new("Frame")
-    SliderFill.Name = "SliderFill"
-    SliderFill.Size = UDim2.new(0, 0, 1, 0)
-    SliderFill.BackgroundColor3 = Theme.AccentColor
-    SliderFill.BorderSizePixel = 0
-    SliderFill.Parent = SliderBG
-    
-    local SliderButton = Instance.new("TextButton")
-    SliderButton.Name = "SliderButton"
-    SliderButton.Size = UDim2.new(0, 20, 0, 20)
-    SliderButton.Position = UDim2.new(0, -10, 0.5, -10)
-    SliderButton.BackgroundColor3 = Theme.TextColor
-    SliderButton.BorderSizePixel = 0
-    SliderButton.Text = ""
-    SliderButton.Parent = SliderFill
-    
-    local value = default or min
-    local dragging = false
-    
-    local function updateSlider(input)
-        local sizeX = math.clamp((input.Position.X - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X, 0, 1)
-        SliderFill.Size = UDim2.new(sizeX, 0, 1, 0)
-        
-        value = math.floor(min + ((max - min) * sizeX))
-        ValueLabel.Text = tostring(value)
-        callback(value)
-    end
-    
-    SliderButton.MouseButton1Down:Connect(function()
-        dragging = true
-    end)
-    
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-    
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            updateSlider(input)
-        end
-    end)
-    
-    SliderBG.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            updateSlider(input)
-            dragging = true
-        end
-    end)
-    
-    local defaultScale = (default - min) / (max - min)
-    SliderFill.Size = UDim2.new(defaultScale, 0, 1, 0)
-    
-    return {
-        Set = function(newValue)
-            value = math.clamp(newValue, min, max)
-            local scale = (value - min) / (max - min)
-            SliderFill.Size = UDim2.new(scale, 0, 1, 0)
-            ValueLabel.Text = tostring(value)
-            callback(value)
-        end,
-        Get = function()
-            return value
-        end
-    }
-end
-
-function OrionLib:AddTextbox(tab, text, placeholder, callback)
-    local TextboxContainer = Instance.new("Frame")
-    TextboxContainer.Name = text .. "TextboxContainer"
-    TextboxContainer.Size = UDim2.new(1, 0, 0, 60)
-    TextboxContainer.BackgroundColor3 = Theme.ElementColor
-    TextboxContainer.BorderSizePixel = 0
-    TextboxContainer.Parent = tab.Content
-    
-    local TextLabel = Instance.new("TextLabel")
-    TextLabel.Name = "TextLabel"
-    TextLabel.Size = UDim2.new(1, -10, 0, 30)
-    TextLabel.Position = UDim2.new(0, 10, 0, 0)
-    TextLabel.BackgroundTransparency = 1
-    TextLabel.Text = text
-    TextLabel.TextColor3 = Theme.TextColor
-    TextLabel.TextSize = 16
-    TextLabel.Font = Enum.Font.SourceSans
-    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TextLabel.Parent = TextboxContainer
-    
-    local Textbox = Instance.new("TextBox")
-    Textbox.Name = "Textbox"
-    Textbox.Size = UDim2.new(1, -20, 0, 30)
-    Textbox.Position = UDim2.new(0, 10, 0.5, 0)
-    Textbox.BackgroundColor3 = Theme.BackgroundColor
-    Textbox.BorderSizePixel = 0
-    Textbox.Text = ""
-    Textbox.PlaceholderText = placeholder or "Enter text..."
-    Textbox.TextColor3 = Theme.TextColor
-    Textbox.PlaceholderColor3 = Color3.fromRGB(120, 120, 120)
-    Textbox.TextSize = 14
-    Textbox.Font = Enum.Font.SourceSans
-    Textbox.ClearTextOnFocus = false
-    Textbox.Parent = TextboxContainer
-    
-    Textbox.FocusLost:Connect(function(enterPressed)
-        callback(Textbox.Text, enterPressed)
-    end)
-    
-    return {
-        Set = function(newText)
-            Textbox.Text = newText
-        end,
-        Get = function()
-            return Textbox.Text
-        end
-    }
-end
-
-function OrionLib:AddLabel(tab, text)
-    local Label = Instance.new("TextLabel")
-    Label.Name = text .. "Label"
-    Label.Size = UDim2.new(1, 0, 0, 30)
-    Label.BackgroundTransparency = 1
-    Label.Text = text
-    Label.TextColor3 = Theme.TextColor
-    Label.TextSize = 16
-    Label.Font = Enum.Font.SourceSansBold
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Parent = tab.Content
-    
-    return {
-        Set = function(newText)
-            Label.Text = newText
-        end
-    }
-end
-
-function OrionLib:AddDropdown(tab, text, options, default, callback)
-    local DropdownContainer = Instance.new("Frame")
-    DropdownContainer.Name = text .. "DropdownContainer"
-    DropdownContainer.Size = UDim2.new(1, 0, 0, 60)
-    DropdownContainer.BackgroundColor3 = Theme.ElementColor
-    DropdownContainer.BorderSizePixel = 0
-    DropdownContainer.Parent = tab.Content
-    
-    local TextLabel = Instance.new("TextLabel")
-    TextLabel.Name = "TextLabel"
-    TextLabel.Size = UDim2.new(1, -10, 0, 30)
-    TextLabel.Position = UDim2.new(0, 10, 0, 0)
-    TextLabel.BackgroundTransparency = 1
-    TextLabel.Text = text
-    TextLabel.TextColor3 = Theme.TextColor
-    TextLabel.TextSize = 16
-    TextLabel.Font = Enum.Font.SourceSans
-    TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TextLabel.Parent = DropdownContainer
-    
-    local DropdownButton = Instance.new("TextButton")
-    DropdownButton.Name = "DropdownButton"
-    DropdownButton.Size = UDim2.new(1, -20, 0, 30)
-    DropdownButton.Position = UDim2.new(0, 10, 0.5, 0)
-    DropdownButton.BackgroundColor3 = Theme.BackgroundColor
-    DropdownButton.BorderSizePixel = 0
-    DropdownButton.Text = default or "Select..."
-    DropdownButton.TextColor3 = Theme.TextColor
-    DropdownButton.TextSize = 14
-    DropdownButton.Font = Enum.Font.SourceSans
-    DropdownButton.Parent = DropdownContainer
-    
-    local DropdownMenu = Instance.new("Frame")
-    DropdownMenu.Name = "DropdownMenu"
-    DropdownMenu.Size = UDim2.new(1, 0, 0, 0)
-    DropdownMenu.Position = UDim2.new(0, 0, 1, 0)
-    DropdownMenu.BackgroundColor3 = Theme.BackgroundColor
-    DropdownMenu.BorderSizePixel = 0
-    DropdownMenu.Visible = false
-    DropdownMenu.ZIndex = 10
-    DropdownMenu.Parent = DropdownButton
-    
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    UIListLayout.Parent = DropdownMenu
-    
-    local isOpen = false
-    local selected = default
-    
-    local function toggleDropdown()
-        isOpen = not isOpen
-        if isOpen then
-            DropdownMenu.Visible = true
-            DropdownMenu.Size = UDim2.new(1, 0, 0, #options * 30)
-        else
-            DropdownMenu.Visible = false
-            DropdownMenu.Size = UDim2.new(1, 0, 0, 0)
-        end
-    end
-    
-    DropdownButton.MouseButton1Click:Connect(toggleDropdown)
-    
-    for i, option in ipairs(options) do
-        local OptionButton = Instance.new("TextButton")
-        OptionButton.Name = option .. "Option"
-        OptionButton.Size = UDim2.new(1, 0, 0, 30)
-        OptionButton.BackgroundColor3 = Theme.ElementColor
-        OptionButton.BorderSizePixel = 0
-        OptionButton.Text = option
-        OptionButton.TextColor3 = Theme.TextColor
-        OptionButton.TextSize = 14
-        OptionButton.Font = Enum.Font.SourceSans
-        OptionButton.ZIndex = 11
-        OptionButton.Parent = DropdownMenu
-        
-        OptionButton.MouseButton1Click:Connect(function()
-            selected = option
-            DropdownButton.Text = option
-            toggleDropdown()
-            callback(option)
-        end)
-    end
-    
-    return {
-        Set = function(option)
-            if table.find(options, option) then
-                selected = option
-                DropdownButton.Text = option
-                callback(option)
+            local ToggleContainer = Instance.new("Frame")
+            ToggleContainer.Name = text .. "ToggleContainer"
+            ToggleContainer.Size = UDim2.new(1, 0, 0, 30)
+            ToggleContainer.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            ToggleContainer.BorderSizePixel = 0
+            ToggleContainer.Parent = TabContent
+            
+            local TextLabel = Instance.new("TextLabel")
+            TextLabel.Name = "TextLabel"
+            TextLabel.Size = UDim2.new(1, -50, 1, 0)
+            TextLabel.Position = UDim2.new(0, 10, 0, 0)
+            TextLabel.BackgroundTransparency = 1
+            TextLabel.Text = text
+            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TextLabel.TextSize = 14
+            TextLabel.Font = Enum.Font.SourceSans
+            TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TextLabel.Parent = ToggleContainer
+            
+            local ToggleButton = Instance.new("Frame")
+            ToggleButton.Name = "ToggleButton"
+            ToggleButton.Size = UDim2.new(0, 40, 0, 20)
+            ToggleButton.Position = UDim2.new(1, -45, 0.5, -10)
+            ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            ToggleButton.BorderSizePixel = 0
+            ToggleButton.Parent = ToggleContainer
+            
+            local ToggleIndicator = Instance.new("Frame")
+            ToggleIndicator.Name = "ToggleIndicator"
+            ToggleIndicator.Size = UDim2.new(0, 16, 0, 16)
+            ToggleIndicator.Position = UDim2.new(0, 2, 0.5, -8)
+            ToggleIndicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            ToggleIndicator.BorderSizePixel = 0
+            ToggleIndicator.Parent = ToggleButton
+            
+            local enabled = default or false
+            
+            local function updateToggle()
+                if enabled then
+                    ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+                    ToggleIndicator.Position = UDim2.new(0, 22, 0.5, -8)
+                else
+                    ToggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+                    ToggleIndicator.Position = UDim2.new(0, 2, 0.5, -8)
+                end
+                callback(enabled)
             end
+            
+            ToggleContainer.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    enabled = not enabled
+                    updateToggle()
+                end
+            end)
+            
+            updateToggle()
+            
+            return {
+                Set = function(value)
+                    enabled = value
+                    updateToggle()
+                end,
+                Get = function()
+                    return enabled
+                end
+            }
         end,
-        Get = function()
-            return selected
+        
+        AddSlider = function(text, min, max, default, callback)
+            local SliderContainer = Instance.new("Frame")
+            SliderContainer.Name = text .. "SliderContainer"
+            SliderContainer.Size = UDim2.new(1, 0, 0, 50)
+            SliderContainer.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            SliderContainer.BorderSizePixel = 0
+            SliderContainer.Parent = TabContent
+            
+            local TextLabel = Instance.new("TextLabel")
+            TextLabel.Name = "TextLabel"
+            TextLabel.Size = UDim2.new(1, -50, 0, 25)
+            TextLabel.Position = UDim2.new(0, 10, 0, 0)
+            TextLabel.BackgroundTransparency = 1
+            TextLabel.Text = text
+            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TextLabel.TextSize = 14
+            TextLabel.Font = Enum.Font.SourceSans
+            TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TextLabel.Parent = SliderContainer
+            
+            local ValueLabel = Instance.new("TextLabel")
+            ValueLabel.Name = "ValueLabel"
+            ValueLabel.Size = UDim2.new(0, 40, 0, 25)
+            ValueLabel.Position = UDim2.new(1, -45, 0, 0)
+            ValueLabel.BackgroundTransparency = 1
+            ValueLabel.Text = tostring(default or min)
+            ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            ValueLabel.TextSize = 14
+            ValueLabel.Font = Enum.Font.SourceSans
+            ValueLabel.Parent = SliderContainer
+            
+            local SliderBG = Instance.new("Frame")
+            SliderBG.Name = "SliderBG"
+            SliderBG.Size = UDim2.new(1, -20, 0, 10)
+                        SliderBG.Position = UDim2.new(0, 10, 0, 30)
+            SliderBG.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            SliderBG.BorderSizePixel = 0
+            SliderBG.Parent = SliderContainer
+            
+            local SliderFill = Instance.new("Frame")
+            SliderFill.Name = "SliderFill"
+            SliderFill.Size = UDim2.new(0, 0, 1, 0)
+            SliderFill.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
+            SliderFill.BorderSizePixel = 0
+            SliderFill.Parent = SliderBG
+            
+            local SliderButton = Instance.new("TextButton")
+            SliderButton.Name = "SliderButton"
+            SliderButton.Size = UDim2.new(0, 10, 0, 20)
+            SliderButton.Position = UDim2.new(0, -5, 0.5, -10)
+            SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            SliderButton.BorderSizePixel = 0
+            SliderButton.Text = ""
+            SliderButton.Parent = SliderFill
+            
+            local value = default or min
+            local dragging = false
+            
+            local function updateSlider(input)
+                local sizeX = math.clamp((input.Position.X - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X, 0, 1)
+                SliderFill.Size = UDim2.new(sizeX, 0, 1, 0)
+                
+                value = math.floor(min + ((max - min) * sizeX))
+                ValueLabel.Text = tostring(value)
+                callback(value)
+            end
+            
+            SliderButton.MouseButton1Down:Connect(function()
+                dragging = true
+            end)
+            
+            UserInputService.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    dragging = false
+                end
+            end)
+            
+            UserInputService.InputChanged:Connect(function(input)
+                if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+                    updateSlider(input)
+                end
+            end)
+            
+            SliderBG.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    updateSlider(input)
+                    dragging = true
+                end
+            end)
+            
+            local defaultScale = (default - min) / (max - min)
+            SliderFill.Size = UDim2.new(defaultScale, 0, 1, 0)
+            
+            return {
+                Set = function(newValue)
+                    value = math.clamp(newValue, min, max)
+                    local scale = (value - min) / (max - min)
+                    SliderFill.Size = UDim2.new(scale, 0, 1, 0)
+                    ValueLabel.Text = tostring(value)
+                    callback(value)
+                end,
+                Get = function()
+                    return value
+                end
+            }
         end,
-        Refresh = function(newOptions, newDefault)
-            for _, child in pairs(DropdownMenu:GetChildren()) do
-                if child:IsA("TextButton") then
-                    child:Destroy()
+        
+        AddDropdown = function(text, options, default, callback)
+            local DropdownContainer = Instance.new("Frame")
+            DropdownContainer.Name = text .. "DropdownContainer"
+            DropdownContainer.Size = UDim2.new(1, 0, 0, 50)
+            DropdownContainer.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            DropdownContainer.BorderSizePixel = 0
+            DropdownContainer.Parent = TabContent
+            
+            local TextLabel = Instance.new("TextLabel")
+            TextLabel.Name = "TextLabel"
+            TextLabel.Size = UDim2.new(1, -10, 0, 25)
+            TextLabel.Position = UDim2.new(0, 10, 0, 0)
+            TextLabel.BackgroundTransparency = 1
+            TextLabel.Text = text
+            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TextLabel.TextSize = 14
+            TextLabel.Font = Enum.Font.SourceSans
+            TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TextLabel.Parent = DropdownContainer
+            
+            local DropdownButton = Instance.new("TextButton")
+            DropdownButton.Name = "DropdownButton"
+            DropdownButton.Size = UDim2.new(1, -20, 0, 25)
+            DropdownButton.Position = UDim2.new(0, 10, 0, 25)
+            DropdownButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            DropdownButton.BorderSizePixel = 0
+            DropdownButton.Text = default or "Select..."
+            DropdownButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            DropdownButton.TextSize = 14
+            DropdownButton.Font = Enum.Font.SourceSans
+            DropdownButton.Parent = DropdownContainer
+            
+            local DropdownMenu = Instance.new("Frame")
+            DropdownMenu.Name = "DropdownMenu"
+            DropdownMenu.Size = UDim2.new(1, 0, 0, 0)
+            DropdownMenu.Position = UDim2.new(0, 0, 1, 0)
+            DropdownMenu.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            DropdownMenu.BorderSizePixel = 0
+            DropdownMenu.Visible = false
+            DropdownMenu.ZIndex = 10
+            DropdownMenu.Parent = DropdownButton
+            
+            local UIListLayout = Instance.new("UIListLayout")
+            UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+            UIListLayout.Parent = DropdownMenu
+            
+            local isOpen = false
+            local selected = default
+            
+            local function toggleDropdown()
+                isOpen = not isOpen
+                if isOpen then
+                    DropdownMenu.Visible = true
+                    DropdownMenu.Size = UDim2.new(1, 0, 0, #options * 25)
+                else
+                    DropdownMenu.Visible = false
+                    DropdownMenu.Size = UDim2.new(1, 0, 0, 0)
                 end
             end
             
-            options = newOptions
+            DropdownButton.MouseButton1Click:Connect(toggleDropdown)
             
             for i, option in ipairs(options) do
                 local OptionButton = Instance.new("TextButton")
                 OptionButton.Name = option .. "Option"
-                OptionButton.Size = UDim2.new(1, 0, 0, 30)
-                OptionButton.BackgroundColor3 = Theme.ElementColor
+                OptionButton.Size = UDim2.new(1, 0, 0, 25)
+                OptionButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 OptionButton.BorderSizePixel = 0
                 OptionButton.Text = option
-                OptionButton.TextColor3 = Theme.TextColor
+                OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
                 OptionButton.TextSize = 14
                 OptionButton.Font = Enum.Font.SourceSans
                 OptionButton.ZIndex = 11
@@ -644,70 +479,132 @@ function OrionLib:AddDropdown(tab, text, options, default, callback)
                 end)
             end
             
-            if newDefault then
-                selected = newDefault
-                DropdownButton.Text = newDefault
-            end
+            return {
+                Set = function(option)
+                    if table.find(options, option) then
+                        selected = option
+                        DropdownButton.Text = option
+                        callback(option)
+                    end
+                end,
+                Get = function()
+                    return selected
+                end
+            }
+        end,
+        
+        AddTextbox = function(text, placeholder, callback)
+            local TextboxContainer = Instance.new("Frame")
+            TextboxContainer.Name = text .. "TextboxContainer"
+            TextboxContainer.Size = UDim2.new(1, 0, 0, 50)
+            TextboxContainer.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+            TextboxContainer.BorderSizePixel = 0
+            TextboxContainer.Parent = TabContent
+            
+            local TextLabel = Instance.new("TextLabel")
+            TextLabel.Name = "TextLabel"
+            TextLabel.Size = UDim2.new(1, -10, 0, 25)
+            TextLabel.Position = UDim2.new(0, 10, 0, 0)
+            TextLabel.BackgroundTransparency = 1
+            TextLabel.Text = text
+            TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            TextLabel.TextSize = 14
+            TextLabel.Font = Enum.Font.SourceSans
+            TextLabel.TextXAlignment = Enum.TextXAlignment.Left
+            TextLabel.Parent = TextboxContainer
+            
+            local Textbox = Instance.new("TextBox")
+            Textbox.Name = "Textbox"
+            Textbox.Size = UDim2.new(1, -20, 0, 25)
+            Textbox.Position = UDim2.new(0, 10, 0, 25)
+            Textbox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            Textbox.BorderSizePixel = 0
+            Textbox.Text = ""
+            Textbox.PlaceholderText = placeholder or "Enter text..."
+            Textbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Textbox.PlaceholderColor3 = Color3.fromRGB(180, 180, 180)
+            Textbox.TextSize = 14
+            Textbox.Font = Enum.Font.SourceSans
+            Textbox.Parent = TextboxContainer
+            
+            Textbox.FocusLost:Connect(function(enterPressed)
+                callback(Textbox.Text, enterPressed)
+            end)
+            
+            return {
+                Set = function(newText)
+                    Textbox.Text = newText
+                end,
+                Get = function()
+                    return Textbox.Text
+                end
+            }
+        end,
+        
+        AddLabel = function(text)
+            local Label = Instance.new("TextLabel")
+            Label.Name = text .. "Label"
+            Label.Size = UDim2.new(1, 0, 0, 25)
+            Label.BackgroundTransparency = 1
+            Label.Text = text
+            Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+            Label.TextSize = 14
+            Label.Font = Enum.Font.SourceSansBold
+            Label.TextXAlignment = Enum.TextXAlignment.Left
+            Label.Parent = TabContent
+            
+            return {
+                Set = function(newText)
+                    Label.Text = newText
+                end
+            }
         end
     }
 end
 
 function OrionLib:Notify(title, description, duration)
-    local NotifyContainer = Instance.new("Frame")
-    NotifyContainer.Name = "NotifyContainer"
-    NotifyContainer.Size = UDim2.new(0, 300, 0, 80)
-    NotifyContainer.Position = UDim2.new(1, -320, 1, -100)
-    NotifyContainer.BackgroundColor3 = Theme.BackgroundColor
-    NotifyContainer.BorderSizePixel = 0
-    NotifyContainer.Parent = self.ScreenGui
+    local NotifyFrame = Instance.new("Frame")
+    NotifyFrame.Name = "NotifyFrame"
+    NotifyFrame.Size = UDim2.new(0, 250, 0, 80)
+    NotifyFrame.Position = UDim2.new(1, 20, 1, -90)
+    NotifyFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    NotifyFrame.BorderSizePixel = 0
+    NotifyFrame.Parent = ScreenGui
     
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Name = "TitleLabel"
-    TitleLabel.Size = UDim2.new(1, -20, 0, 30)
-    TitleLabel.Position = UDim2.new(0, 10, 0, 5)
+    TitleLabel.Size = UDim2.new(1, 0, 0, 30)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Text = title
-    TitleLabel.TextColor3 = Theme.TextColor
-    TitleLabel.TextSize = 18
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.TextSize = 16
     TitleLabel.Font = Enum.Font.SourceSansBold
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLabel.Parent = NotifyContainer
+    TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+    TitleLabel.Parent = NotifyFrame
     
     local DescriptionLabel = Instance.new("TextLabel")
     DescriptionLabel.Name = "DescriptionLabel"
-    DescriptionLabel.Size = UDim2.new(1, -20, 0, 40)
-    DescriptionLabel.Position = UDim2.new(0, 10, 0, 35)
+    DescriptionLabel.Size = UDim2.new(1, -20, 0, 50)
+    DescriptionLabel.Position = UDim2.new(0, 10, 0, 30)
     DescriptionLabel.BackgroundTransparency = 1
     DescriptionLabel.Text = description
-    DescriptionLabel.TextColor3 = Theme.TextColor
+    DescriptionLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
     DescriptionLabel.TextSize = 14
     DescriptionLabel.Font = Enum.Font.SourceSans
     DescriptionLabel.TextXAlignment = Enum.TextXAlignment.Left
+    DescriptionLabel.TextYAlignment = Enum.TextYAlignment.Top
     DescriptionLabel.TextWrapped = true
-    DescriptionLabel.Parent = NotifyContainer
+    DescriptionLabel.Parent = NotifyFrame
     
-    NotifyContainer.Position = UDim2.new(1, 20, 1, -100)
-    TweenService:Create(NotifyContainer, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(1, -320, 1, -100)}):Play()
+    NotifyFrame.Position = UDim2.new(1, 20, 1, -90)
+    TweenService:Create(NotifyFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(1, -270, 1, -90)}):Play()
     
     task.delay(duration or 5, function()
-        TweenService:Create(NotifyContainer, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(1, 20, 1, -100)}):Play()
+        TweenService:Create(NotifyFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Position = UDim2.new(1, 20, 1, -90)}):Play()
         task.wait(0.5)
-        NotifyContainer:Destroy()
+        NotifyFrame:Destroy()
     end)
-end
-
-function OrionLib:SetTheme(newTheme)
-    for key, value in pairs(newTheme) do
-        if Theme[key] then
-            Theme[key] = value
-        end
-    end
-end
-
-function OrionLib:Destroy()
-    if self.ScreenGui then
-        self.ScreenGui:Destroy()
-    end
 end
 
 return OrionLib
