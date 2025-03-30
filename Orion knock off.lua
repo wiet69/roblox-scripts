@@ -695,19 +695,143 @@ function OrionLib:MakeWindow(config)
 		BackgroundTransparency = 1.000,
 		Position = UDim2.new(1, -50, 0, 0),
 		Size = UDim2.new(0, 25, 0, 30),
-		local function loadOrionLib()
-    local success, result = pcall(function()
-        return loadstring(game:HttpGet("https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/OrionLib.lua"))()
-    end)
-    
-    if success then
-        return result
-    else
-        warn("Failed to load OrionLib: " .. result)
-        return nil
-    end
+				Font = Enum.Font.GothamBold,
+		Text = "-",
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextSize = 14.000,
+	})
+	
+	local TabHolder = Create("Frame", {
+		Name = "TabHolder",
+		Parent = MainFrame,
+		BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+		BorderSizePixel = 0,
+		Position = UDim2.new(0, 0, 0, 30),
+		Size = UDim2.new(0, 120, 1, -30),
+	})
+	
+	local TabContainer = Create("Frame", {
+		Name = "TabContainer",
+		Parent = MainFrame,
+		BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+		BorderSizePixel = 0,
+		Position = UDim2.new(0, 120, 0, 30),
+		Size = UDim2.new(1, -120, 1, -30),
+	})
+	
+	local UIListLayout = Create("UIListLayout", {
+		Parent = TabHolder,
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	})
+	
+	MakeDraggable(TopBar, MainFrame)
+	
+	CloseButton.MouseButton1Click:Connect(function()
+		ScreenGui:Destroy()
+	end)
+	
+	local minimized = false
+	local originalSize = MainFrame.Size
+	local originalPosition = MainFrame.Position
+	
+	MinimizeButton.MouseButton1Click:Connect(function()
+		minimized = not minimized
+		if minimized then
+			MainFrame:TweenSize(UDim2.new(0, 500, 0, 30), "Out", "Quad", 0.3, true)
+		else
+			MainFrame:TweenSize(originalSize, "Out", "Quad", 0.3, true)
+		end
+	end)
+	
+	local Window = {}
+	Window.TabHandler = TabHandler
+	Window.TabHandler.TabContainer = TabContainer
+	Window.TabHandler.TabHolder = TabHolder
+	
+	function Window:MakeTab(info)
+		info = info or {}
+		local name = info.Name or "New Tab"
+		local icon = info.Icon or "rbxassetid://4483345998"
+		local premiumOnly = info.PremiumOnly or false
+		
+		if premiumOnly and not hidePremium then
+			return
+		end
+		
+		return self.TabHandler:CreateTab(name, icon)
+	end
+	
+	function Window:MakeNotification(info)
+		info = info or {}
+		local title = info.Title or "Notification"
+		local content = info.Content or "Content"
+		local image = info.Image or "rbxassetid://4483345998"
+		local time = info.Time or 5
+		
+		local NotificationFrame = Create("Frame", {
+			Name = "NotificationFrame",
+			Parent = ScreenGui,
+			BackgroundColor3 = Color3.fromRGB(35, 35, 35),
+			BorderSizePixel = 0,
+			Position = UDim2.new(1, -300, 1, -100),
+			Size = UDim2.new(0, 250, 0, 80),
+			AnchorPoint = Vector2.new(0, 1),
+		})
+		
+		local NotificationTitle = Create("TextLabel", {
+			Name = "NotificationTitle",
+			Parent = NotificationFrame,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1.000,
+			Position = UDim2.new(0, 60, 0, 5),
+			Size = UDim2.new(0, 180, 0, 20),
+			Font = Enum.Font.GothamBold,
+			Text = title,
+			TextColor3 = Color3.fromRGB(255, 255, 255),
+			TextSize = 14.000,
+			TextXAlignment = Enum.TextXAlignment.Left,
+		})
+		
+		local NotificationContent = Create("TextLabel", {
+			Name = "NotificationContent",
+			Parent = NotificationFrame,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1.000,
+			Position = UDim2.new(0, 60, 0, 25),
+			Size = UDim2.new(0, 180, 0, 50),
+			Font = Enum.Font.Gotham,
+			Text = content,
+			TextColor3 = Color3.fromRGB(200, 200, 200),
+			TextSize = 12.000,
+			TextWrapped = true,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			TextYAlignment = Enum.TextYAlignment.Top,
+		})
+		
+		local NotificationImage = Create("ImageLabel", {
+			Name = "NotificationImage",
+			Parent = NotificationFrame,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 1.000,
+			Position = UDim2.new(0, 10, 0, 10),
+			Size = UDim2.new(0, 40, 0, 40),
+			Image = image,
+		})
+		
+		NotificationFrame:TweenPosition(UDim2.new(1, -270, 1, -100), "Out", "Quad", 0.5, true)
+		
+		wait(time)
+		
+		NotificationFrame:TweenPosition(UDim2.new(1, 300, 1, -100), "Out", "Quad", 0.5, true)
+		
+		wait(0.5)
+		NotificationFrame:Destroy()
+	end
+	
+	return Window
 end
 
-return loadOrionLib()
+return OrionLib
+
 
             
